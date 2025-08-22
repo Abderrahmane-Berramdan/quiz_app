@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:quiz_app/model/quiz_model.dart';
+import 'package:quiz_app/screens/result_screen.dart';
 import 'package:quiz_app/service/api_service.dart';
 
 class QuizScreen extends StatefulWidget {
@@ -20,6 +21,8 @@ class _QuizScreenState extends State<QuizScreen> {
   int indexQuestion = 0;
   List<QuizModel> quizList = [];
   List answers = [];
+  int correctAnswer = 0;
+  int incorrectAnswer = 0;
 
   void startTimer() {
     timer = Timer.periodic(Duration(seconds: 1), (timer) {
@@ -49,8 +52,10 @@ class _QuizScreenState extends State<QuizScreen> {
 
   bool verify(dynamic answer, QuizModel question) {
     if (answer == question.correctAnswer) {
+      correctAnswer++;
       return true;
     } else {
+      incorrectAnswer++;
       return false;
     }
   }
@@ -64,16 +69,14 @@ class _QuizScreenState extends State<QuizScreen> {
       quizList = response;
       answers = List.from(quizList[indexQuestion].incorrectAnswers);
       answers.add(quizList[indexQuestion].correctAnswer);
-    });
-    setState(() {
       isLoading = false;
     });
+    startTimer();
   }
 
   @override
   void initState() {
     super.initState();
-    startTimer();
     fetchQuiz();
   }
 
@@ -186,6 +189,17 @@ class _QuizScreenState extends State<QuizScreen> {
                                   );
                                 } else {
                                   timer!.cancel();
+                                  Navigator.pushAndRemoveUntil(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => ResultScreen(
+                                        correctAnswer: correctAnswer,
+                                        incorrectAnswer: incorrectAnswer,
+                                        totaleQuestion: quizList.length,
+                                      ),
+                                    ),
+                                    (route) => false,
+                                  );
                                 }
                               },
                               child: Container(
@@ -221,32 +235,3 @@ class _QuizScreenState extends State<QuizScreen> {
     );
   }
 }
-
-// indexQuestion < quizList.length - 1
-//                                   ? () {
-//                                       setState(() {
-//                                         selectIndex = i;
-//                                         isCorrect = verify(
-//                                           answers[i],
-//                                           quizList[indexQuestion],
-//                                         );
-//                                       });
-
-//                                       Future.delayed(
-//                                         Duration(milliseconds: 200),
-//                                         () {
-//                                           indexQuizIncrement();
-//                                         },
-//                                       );
-//                                     }
-
-//                                   : () {
-//                                       setState(() {
-//                                         selectIndex = i;
-//                                         isCorrect = verify(
-//                                           answers[i],
-//                                           quizList[indexQuestion],
-//                                         );
-//                                         timer!.cancel();
-//                                       });
-//                                     },
